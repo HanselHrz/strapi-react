@@ -1,21 +1,26 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
+import { useParams, useHistory } from "react-router-dom";
 import AnimationRevealPage from "helpers/AnimationRevealPage.js";
 import { Container, ContentWithPaddingXl } from "components/misc/Layouts";
 import tw from "twin.macro";
 import { PrimaryButton } from "components/misc/Buttons";
 import { SectionHeading } from "components/misc/Headings";
 import Header from "components/headers/light.js";
-import { createBlog } from "service/strapi-services";
+import { getBlogPostById, updateBlog, deleteBlog } from "../service/strapi-services";
+import iconDelete from 'images/delete.svg'
 
+const Image = tw.button`ml-4`;
 const Form = tw.form`mx-auto max-w-screen-lg`;
 const Input = tw.input`w-full p-4 mt-4 bg-gray-200 rounded-lg border border-gray-300 focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500`;
 const Textarea = tw.textarea`w-full h-64 p-4 mt-4 bg-gray-200 rounded-lg border border-gray-300 focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500`;
 const SubmitButton = tw(PrimaryButton)`w-full mt-8`;
 const Label = tw.label`block text-sm font-medium text-gray-700`;
-const HeadingRow = tw.div`m-auto`;
+const HeadingRow = tw.div`flex items-center justify-between mb-10`;
 const Heading = tw(SectionHeading)`text-gray-900`;
 
-const CreateBlog = () => {
+const EditBlog = () => {
+  const { id } = useParams();
+  const history = useHistory();
   const [title, setTitle] = useState("");
   const [category, setCategory] = useState("");
   const [publishedDate, setPublishedDate] = useState("");
@@ -24,14 +29,39 @@ const CreateBlog = () => {
   const [coverImage, setCoverImage] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
-  const [success, setSuccess] = useState(false);
-  let headingText = "Crea tu post";
+  let headingText = "Edita tu post";
+
+  useEffect(() => {
+    const fetchData = async () => {
+      const data = await getBlogPostById(id);
+      console.log(data)
+      const { attributes } = data;
+      setTitle(attributes.blogTitle);
+      setCategory(attributes.category);
+      setPublishedDate(attributes.publishedDate);
+      setDescription(attributes.description);
+      setContent(attributes.blogContent);
+    };
+    fetchData();
+  }, [id]);
+
+  const handleDelete = async () => {
+    if (window.confirm('Are you sure you want to delete this blog post?')) {
+      try {
+        await deleteBlog(id);
+        history.push('/'); 
+        alert('Blog post deleted successfully!');
+      } catch (error) {
+        console.error('Error deleting blog post:', error);
+        setError('Failed to delete blog post.');
+      }
+    }
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
     setError(null);
-    setSuccess(false);
 
     const formData = new FormData();
     formData.append('data', JSON.stringify({
@@ -47,16 +77,10 @@ const CreateBlog = () => {
     }
 
     try {
-      await createBlog(formData);
-      setSuccess(true);
-      setTitle("");
-      setCategory("");
-      setPublishedDate("");
-      setDescription("");
-      setContent("");
-      setCoverImage(null);
+      await updateBlog(id, formData); // Assuming updateBlog is similar to createBlog but for updates
+      alert("Post updated successfully!");
     } catch (error) {
-      console.error('Error creating blog post:', error);
+      console.error('Error updating blog post:', error);
       setError(error.message);
     } finally {
       setLoading(false);
@@ -70,6 +94,9 @@ const CreateBlog = () => {
         <ContentWithPaddingXl>
           <HeadingRow>
             <Heading>{headingText}</Heading>
+            <Image onClick={handleDelete}>
+              <img src={iconDelete} alt="Delete" />
+            </Image>
           </HeadingRow>
           <Form onSubmit={handleSubmit}>
             {error && (
@@ -77,12 +104,6 @@ const CreateBlog = () => {
                 {error}
               </p>
             )}
-            {success && (
-              <p style={{ backgroundColor: "green", color: "white", padding: "12px", borderRadius: "8px", marginTop: "20px", marginBottom: "10px" }}>
-                Post created successfully!
-              </p>
-            )}
-
             <Label>Title</Label>
             <Input
               type="text"
@@ -102,7 +123,6 @@ const CreateBlog = () => {
             <Label>Published Date</Label>
             <Input
               type="date"
-              placeholder="Published Date"
               value={publishedDate}
               onChange={(e) => setPublishedDate(e.target.value)}
               required
@@ -127,7 +147,7 @@ const CreateBlog = () => {
               onChange={(e) => setCoverImage(e.target.files[0])}
             />
             <SubmitButton type="submit" disabled={loading}>
-              {loading ? "Cargando..." : "Cargar Archivos"}
+              {loading ? "Cargando..." : "Actualizar Post"}
             </SubmitButton>
           </Form>
         </ContentWithPaddingXl>
@@ -136,4 +156,4 @@ const CreateBlog = () => {
   );
 };
 
-export default CreateBlog;
+export default EditBlog;

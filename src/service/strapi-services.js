@@ -35,4 +35,22 @@ export const createBlog = async( postData ) => {
   }
 }
 
-  
+export const updateBlog = async (data, id) => {
+  try {
+    const response = await axios.put(`${API_URL}/${id}`, data);
+    return response.data;
+  } catch (error) {
+      console.error('Error creating blog post:', error);
+      throw error;
+  }
+}
+
+export const deleteBlog = async (id) => {
+  try {
+    const response = await axios.delete(`${API_URL}/${id}`);
+    return response.data;
+  } catch (error) {
+      console.error('Error creating blog post:', error);
+      throw error;
+  }
+}

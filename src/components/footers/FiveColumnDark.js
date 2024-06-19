@@ -79,9 +79,6 @@ export default () => {
               <LinkListItem>
                 <Link href="#">Support</Link>
               </LinkListItem>
-              <LinkListItem>
-                <Link href="#">About Us</Link>
-              </LinkListItem>
             </LinkList>
           </Column>
           <Column>

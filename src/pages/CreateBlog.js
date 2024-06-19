@@ -3,9 +3,9 @@ import AnimationRevealPage from "helpers/AnimationRevealPage.js";
 import { Container, ContentWithPaddingXl } from "components/misc/Layouts";
 import tw from "twin.macro";
 import { PrimaryButton } from "components/misc/Buttons";
-import { createBlog } from "service/strapi-services";
 import { SectionHeading } from "components/misc/Headings";
 import Header from "components/headers/light.js";
+import { createBlog } from "service/strapi-services";
 
 const Form = tw.form`mx-auto max-w-screen-lg`;
 const Input = tw.input`w-full p-4 mt-4 bg-gray-200 rounded-lg border border-gray-300 focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500`;
@@ -33,32 +33,35 @@ const CreateBlog = () => {
     setError(null);
     setSuccess(false);
 
-    const postData = {
-        data: {
-            blogTitle: title,
-            category: category,
-            publishedDate: publishedDate,
-            description: description,
-            blogContent: content
-        }
-    };
+    const formData = new FormData();
+    formData.append('data', JSON.stringify({
+      blogTitle: title,
+      category: category,
+      publishedDate: publishedDate,
+      description: description,
+      blogContent: content
+    }));
+
+    if (coverImage) {
+      formData.append('files.coverImage', coverImage, coverImage.name);
+    }
 
     try {
-        await createBlog(postData)
-        setSuccess(true);
-        setTitle("");
-        setCategory("");
-        setPublishedDate("");
-        setDescription("");
-        setContent("");
+      await createBlog(formData);
+      setSuccess(true);
+      setTitle("");
+      setCategory("");
+      setPublishedDate("");
+      setDescription("");
+      setContent("");
+      setCoverImage(null);
     } catch (error) {
-        console.error('Error creating blog post:', error);
-        setError(error.message);
+      console.error('Error creating blog post:', error);
+      setError(error.message);
     } finally {
-        setLoading(false);
+      setLoading(false);
     }
-};
-
+  };
 
   return (
     <AnimationRevealPage>
@@ -69,8 +72,17 @@ const CreateBlog = () => {
             <Heading>{headingText}</Heading>
           </HeadingRow>
           <Form onSubmit={handleSubmit}>
-            {error && <p tw="text-red-500 mt-4">{error}</p>}
-            {success && <p tw="text-green-500 mt-4">Post created successfully!</p>}
+            {error && (
+              <p style={{ backgroundColor: "red", color: "white", padding: "12px", borderRadius: "8px", marginTop: "16px", marginBottom: "10px" }}>
+                {error}
+              </p>
+            )}
+            {success && (
+              <p style={{ backgroundColor: "green", color: "white", padding: "12px", borderRadius: "8px", marginTop: "20px", marginBottom: "10px" }}>
+                Post created successfully!
+              </p>
+            )}
+
             <Label>Title</Label>
             <Input
               type="text"
@@ -108,6 +120,11 @@ const CreateBlog = () => {
               value={content}
               onChange={(e) => setContent(e.target.value)}
               required
+            />
+            <Label>Cover Image</Label>
+            <Input
+              type="file"
+              onChange={(e) => setCoverImage(e.target.files[0])}
             />
             <SubmitButton type="submit" disabled={loading}>
               {loading ? "Submitting..." : "Submit"}

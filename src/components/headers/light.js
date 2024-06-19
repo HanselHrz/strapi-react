@@ -72,7 +72,7 @@ export default ({ roundedHeaderButton = false, logoLink, links, className, colla
   const defaultLogoLink = (
     <LogoLink to="/">
       <img src={logo} alt="logo" />
-      Treact
+      TuBlog
     </LogoLink>
   );
 
